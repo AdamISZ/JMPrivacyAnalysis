@@ -2,13 +2,13 @@
 
 ## Executive summary.
 
-This document addresses the extent to which blockchain analysis can enable the linkage of addresses in a run of Joinmarket's script `tumbler.py` as of version 0.1.0. The first two sections introduce the basic structure of joinmarket in terms of wallets and transactions, and can be skipped by those who know how Joinmarket works.
-The third section describes in outline the default algorithm followed by the `tumbler.py` script.
-Sections 4-6 give an outline of a method that can practically identify the linkages between the addresses used by the user/runner of the tumbler script, not with certainty, but under certain common scenarios. The final section lists a number of different improvements that will either partly or greatly ameliorate this weakness.
+This document addresses the extent to which blockchain analysis can enable the linkage of addresses in a run of Joinmarket's script `tumbler.py` as of version 0.1.0. The first two sections on [wallet structure](#joinmarket-wallet-structure) and [transaction types](#joinmarket-transaction-types) introduce the basic structure of joinmarket in terms of wallets and transactions, and can be skipped by those who know how Joinmarket works.
+The third [section](#tumbler-algorithm) describes in outline the default algorithm followed by the `tumbler.py` script.
+The next three sections give an outline of a method that can practically identify the linkages between the addresses used by the user/runner of the tumbler script, not with certainty, but under certain common scenarios. The final section, and the conclusion, list a number of different improvements that will either partly or greatly ameliorate this weakness.
 
 In simple terms, the core functionality of a coinjoin transaction - extending the possible set of owners of specific utxos - remains in place. But this analysis illustrates that, without careful thought, the privacy gains of doing a sequence of Joinmarket-style coinjoins do not necessarily compound, either multiplicatively or at all (put differently: in the most negative scenario, a sequence of 15 joinmarket transactions might offer no more privacy than a single transaction). Additional measures must be taken which may involve (a) user choosing or not choosing certain tumbler options, (b) changing the Joinmarket codebase or (c) changing the usage pattern. Most likely all of (a), (b) and (c) should be under consideration.
 
-The analysis here applies to varying extents to the other joinmarket scripts (yield-generator.py and sendpayment.py), but this is not addressed by this document.
+The analysis here applies to varying extents to the other joinmarket scripts (`yield-generator.py` and `sendpayment.py`), but this is not addressed by this document.
 
 ## Joinmarket wallet structure
 

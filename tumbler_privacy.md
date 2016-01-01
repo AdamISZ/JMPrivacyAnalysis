@@ -93,7 +93,7 @@ The logic is fairly straightforward: the coinjoin outputs of a transaction must 
 
 Coinjoin outputs may also represent external payments to entities outside the joinmarket wallet. The following very simple diagram gives a starting point for building up a mental model of what's going on.
 
-![alt text](/images/source_sink.svg)
+![alt text](/images/source_sink.png)
 
 The notation in the diagram is explained in the next section.
 

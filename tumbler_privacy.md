@@ -93,7 +93,7 @@ The logic is fairly straightforward: the coinjoin outputs of a transaction must 
 
 Coinjoin outputs may also represent external payments to entities outside the joinmarket wallet. The following very simple diagram gives a starting point for building up a mental model of what's going on.
 
-![alt text](source_sink.svg)
+![alt text](/images/source_sink.svg)
 
 The notation in the diagram is explained in the next section.
 
@@ -107,7 +107,7 @@ We can define 4 distinct joinmarket transaction types. We use the notation "JMTx
 2. (Canonical) CJMTx
  The most fundamental type of joinmarket transaction involves neither a 'source' nor a 'sink', but only spends from this joinmarket wallet to itself, in conjunction with joining counterparties. The coinjoin output goes to a new address on the external branch of the *next* mixdepth, as was described in the previous section.
 
- ![alt text](CJMTx.svg)
+ ![alt text](/images/CJMTx.svg)
 
  **NOTE**: the above diagram ignores transaction fees and coinjoin fees for simplicity, which slightly change the size of the change outputs; this obviously cannot be ignored in real analysis.
 
@@ -117,7 +117,7 @@ We can define 4 distinct joinmarket transaction types. We use the notation "JMTx
 4. SweepJMTx
  This can be either a 'sink' or not, depending on the destination of the coinjoin output. A sweep is characterised by 2 things: (a) the initiator will not create a change output, and (b) the initiator will consume **all** of the utxos in the given mixdepth (both internal and external branches) as inputs, leaving no coins left in that mixdepth.
 
- ![alt text](SweepJMTx.svg)
+ ![alt text](/images/SweepJMTx.svg)
 
 ### Identifying joinmarket transaction types
 
@@ -234,7 +234,7 @@ These other closures, for the makers, may become CMCs later if those parties run
 
 Given this scenario, it will usually be possible to identify which coinjoin output is that owned by the tumbler runner for each of the successive transactions in the tumble. The analyst is presented with something like this:
 
-![alt text](Closures.svg)
+![alt text](/images/Closures.svg)
 
 These three transactions, the last of which is a sweep, for some mixdepth, say m, all have utxos which are members of CMC C1 present in their inputs, and all have a utxo which is a member of C3 as one of their coinjoin outputs (note that this evidence would come from the future transactions which use the members of C3 as inputs).
 

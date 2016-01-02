@@ -4,9 +4,9 @@
 
 This document addresses the extent to which blockchain analysis can enable the linkage of addresses in a run of Joinmarket's script `tumbler.py` as of version 0.1.0. The first two sections on [wallet structure](#joinmarket-wallet-structure) and [transaction types](#joinmarket-transaction-types) introduce the basic structure of joinmarket in terms of wallets and transactions, and can be skipped by those who know how Joinmarket works.
 The third [section](#tumbler-algorithm) describes in outline the default algorithm followed by the `tumbler.py` script.
-The next three sections give an outline of a method that can practically identify the linkages between the addresses used by the user/runner of the tumbler script, not with certainty, but under certain common scenarios. The final section, and the conclusion, list a number of different improvements that will either partly or greatly ameliorate this weakness.
+The next three sections give an outline of a method that can practically identify the linkages between the addresses used by the user/runner of the tumbler script, not with certainty, but under certain common scenarios. It analyses a worst case in which the *set* of tumbler transactions are considered in isolation, i.e. it assumes that the analyst has already been able to isolate the set of transactions which were carried out, which might be relatively easy when Joinmarket volume is low. Strategies for isolating such sets are not investigated, but it is reasonable assume that it will be possible at least sometimes. The final section, and the conclusion, list a number of different improvements that will either partly or greatly ameliorate this weakness.
 
-In simple terms, the core functionality of a coinjoin transaction - extending the possible set of owners of specific utxos - remains in place. But this analysis illustrates that, without careful thought, the privacy gains of doing a sequence of Joinmarket-style coinjoins do not necessarily compound, either multiplicatively or at all (put differently: in the most negative scenario, a sequence of 15 joinmarket transactions might offer no more privacy than a single transaction). Additional measures must be taken which may involve (a) user choosing or not choosing certain tumbler options, (b) changing the Joinmarket codebase or (c) changing the usage pattern. Most likely all of (a), (b) and (c) should be under consideration.
+In simple terms, the core functionality of a coinjoin transaction - extending the possible set of owners of specific utxos - remains in place. But this analysis illustrates that the privacy gains of doing a sequence of Joinmarket-style coinjoins do not necessarily compound, either multiplicatively or at all (put differently: in the most negative scenario, a sequence of 15 joinmarket transactions might offer no more privacy than a single transaction). Additional measures must be taken which may involve (a) user choosing or not choosing certain tumbler options, (b) changing the Joinmarket codebase or (c) changing the usage pattern. Most likely all of (a), (b) and (c) should be under consideration.
 
 The analysis here applies to varying extents to the other joinmarket scripts (`yield-generator.py` and `sendpayment.py`), but this is not addressed by this document.
 
@@ -150,6 +150,7 @@ The remainder of this document analyses focuses on the simplest case, where only
 A reminder that all (except source) JMTxs have this structure:
 
 ins: 
+
 x<sub>1</sub>,x<sub>2</sub>,..x<sub>n</sub> 
 
 outs:
@@ -244,7 +245,7 @@ So, this data will be sufficient evidence to isolate C3 as the mixdepth m+1 for 
 
 The same logic can be applied up the chain of mixdepths. For the simplest kind of tumbler run, with one external payout, it merely remains to identify which of the final coinjoin outputs is the external spend, and which are payouts to the makers. Depending on the details, this will usually be fairly easy, since the makers in the majority of cases will consume these utxos in joinmarket style transactions, whereas the external payout will not.
 
-See simulation code (TODO - link this).
+See [simulation code](/simulations/tumbler_simulation.py). The simulation is a overly simplified case (fixed numbers of transactions per mixdepth, fixed fees for example), but simply running it will output an example of tracing all the way from the first transaction to the last (it generates random transaction data for each run, and will *usually*, but not always be successful).
 
 ## Ameliorations
 
@@ -270,6 +271,10 @@ See simulation code (TODO - link this).
 4. Splitting change into multiple amounts
 
  If amount(z<sub>i</sub>) > y, create two change outputs (y, z<sub>i</sub> -y). This *considerably* increases the complexity/uncertainty of a sudoku-style analysis (more analysis is needed to establish whether it breaks it entirely). If this cannot be done, it probably achieves little to simply create a split of change outputs (i.e. each counterparty creating more than one change output), since subset sum type analysis would still be able to find the input-change linkages as before. The additional combinatorial blowup is almost certainly not significant, considering that very small outputs will be impractical to spend (dust etc.).
+ 
+4. High transaction volume
+
+ The following has been kept out of scope of the analysis: with every yield generator counterparty performing multiple other transactions concurrently with those for the one tumbler under consideration, it may be fairly difficult for the analyst to identify the exact set of transactions for this tumbler. It certainly complexifies the analysis, but the analysis is not computationally intensive (assuming transactions are not huge), and the closure mappings combined with fee payment are probably enough to filter the transaction data until the tumbler's subset is clear.
 
 ## Conclusions
 

@@ -4,11 +4,11 @@
 
 This document addresses the extent to which blockchain analysis can enable the linkage of addresses in a run of Joinmarket's script `tumbler.py` as of version 0.1.0. The first two sections on [wallet structure](#joinmarket-wallet-structure) and [transaction types](#joinmarket-transaction-types) introduce the basic structure of joinmarket in terms of wallets and transactions, and can be skipped by those who know how Joinmarket works.
 The third [section](#tumbler-algorithm) describes in outline the default algorithm followed by the `tumbler.py` script.
-The next three sections give an outline of a method that can practically identify the linkages between the addresses used by the user/runner of the tumbler script, not with certainty, but under certain common scenarios. It analyses a worst case in which the *set* of tumbler transactions are considered in isolation, i.e. it assumes that the analyst has already been able to isolate the set of transactions which were carried out, which might be relatively easy when Joinmarket volume is low. Strategies for isolating such sets are not investigated, but it is reasonable assume that it will be possible at least sometimes. The final section, and the conclusion, list a number of different improvements that will either partly or greatly ameliorate this weakness.
+The next two sections give an outline of a method that **might** practically identify the linkages between the addresses used by the user/runner of the tumbler script, under certain common scenarios. The word 'might' here is an acknowledgement of the uncertainty arising from the fact that the method described is a feasible, but not a certain, way of isolating the set of transactions which corresponded to a single tumbler run. There may be several factors affecting the likelihood of success, including the density of concurrent *other* joinmarket transactions going on by the same participants over the same time period. The final [section](#ameliorations), and the [conclusion](#conclusions), list a number of different improvements that will either partly or greatly ameliorate the weakness that is outlined.
 
 In simple terms, the core functionality of a coinjoin transaction - extending the possible set of owners of specific utxos - remains in place. But this analysis illustrates that the privacy gains of doing a sequence of Joinmarket-style coinjoins do not necessarily compound, either multiplicatively or at all (put differently: in the most negative scenario, a sequence of 15 joinmarket transactions might offer no more privacy than a single transaction). Additional measures must be taken which may involve (a) user choosing or not choosing certain tumbler options, (b) changing the Joinmarket codebase or (c) changing the usage pattern. Most likely all of (a), (b) and (c) should be under consideration.
 
-The analysis here applies to varying extents to the other joinmarket scripts (`yield-generator.py` and `sendpayment.py`), but this is not addressed by this document.
+The analysis here applies to varying extents to the other joinmarket scripts (`yield-generator.py` and `sendpayment.py`, especially the former), but this is not fully addressed by this document.
 
 ## Joinmarket wallet structure
 
@@ -183,11 +183,13 @@ where the first entry in each pair is a random identifier (takes the role, in th
 
 [(0, ()), (130748995, (0,)), (291461442, (1,)), (288897067, (2,)), (641357205, (3,)), (803128130, (4,)), (84442088, (5,)), (422210437, (0, 1)), (419646062, (0, 2)), (772106200, (0, 3)), (933877125, (0, 4)), (215191083, (0, 5)), (580358509, (1, 2)), (932818647, (1, 3)), (1094589572, (1, 4)), (375903530, (1, 5)), (930254272, (2, 3)), (1092025197, (2, 4)), (373339155, (2, 5)), (1444485335, (3, 4)), (725799293, (3, 5)), (887570218, (4, 5)), (711107504, (0, 1, 2)), (1063567642, (0, 1, 3)), (1225338567, (0, 1, 4)), (506652525, (0, 1, 5)), (1061003267, (0, 2, 3)), (1222774192, (0, 2, 4)), (504088150, (0, 2, 5)), (1575234330, (0, 3, 4)), (856548288, (0, 3, 5)), (1018319213, (0, 4, 5)), (1221715714, (1, 2, 3)), (1383486639, (1, 2, 4)), (664800597, (1, 2, 5)), (1735946777, (1, 3, 4)), (1017260735, (1, 3, 5)), (1179031660, (1, 4, 5)), (1733382402, (2, 3, 4)), (1014696360, (2, 3, 5)), (1176467285, (2, 4, 5)), (1528927423, (3, 4, 5)), (1352464709, (0, 1, 2, 3)), (1514235634, (0, 1, 2, 4)), (795549592, (0, 1, 2, 5)), (1866695772, (0, 1, 3, 4)), (1148009730, (0, 1, 3, 5)), (1309780655, (0, 1, 4, 5)), (1864131397, (0, 2, 3, 4)), (1145445355, (0, 2, 3, 5)), (1307216280, (0, 2, 4, 5)), (1659676418, (0, 3, 4, 5)), (2024843844, (1, 2, 3, 4)), (1306157802, (1, 2, 3, 5)), (1467928727, (1, 2, 4, 5)), (1820388865, (1, 3, 4, 5)), (1817824490, (2, 3, 4, 5)), (2155592839, (0, 1, 2, 3, 4)), (1436906797, (0, 1, 2, 3, 5)), (1598677722, (0, 1, 2, 4, 5)), (1951137860, (0, 1, 3, 4, 5)), (1948573485, (0, 2, 3, 4, 5)), (2109285932, (1, 2, 3, 4, 5)), (2240034927, (0, 1, 2, 3, 4, 5))]
 
-It is impossible of course, within one JMTx, to identify which subset of x corresponds to which element of y, but 'coinjoin sudoku' allows us to associate each z<sub>i</sub> with some subsetsum(x) with high probability, as long as a couple of assumptions hold:
+It is impossible of course, within one JMTx, to identify which subset of x corresponds to which element of y, but 'coinjoin sudoku', a term coined by researcher K. Atlas [here](coinjoinsudoku.com/advisory/) in connection with the blockchain.info wallet, allows us to associate each z<sub>i</sub> with some subsetsum(x) with high probability, as long as a few reasonable assumptions hold:
 
 * The bitcoin amounts of the utxos is large compared with the size of Δ
 * The differences in the bitcoin amounts for each pair (z<sub>i</sub>, z<sub>j</sub>) where i and j correspond to different owners, is >> Δ.
 * The number of inputs is not unfeasibly large (the number of input subset sums, which is the power set of the inputs, is 2<sup>n</sup>-1)
+* None of the pairs (x<sub>i</sub>,x<sub>j</sub>) ∀ i,j ∈ {1..n} are equal
+* None of the pairs (z<sub>i</sub>,z<sub>j</sub>) ∀ i,j ∈ {1..k} are equal
 
 Note that it is still possible for the algorithm to fail to identify a particular subset of x even if these assumptions hold, although rarely (where different combinations of inputs happen, by accident, to add up to the same total, within a small tolerance). 
 
@@ -245,7 +247,17 @@ So, this data will be sufficient evidence to isolate C3 as the mixdepth m+1 for 
 
 The same logic can be applied up the chain of mixdepths. For the simplest kind of tumbler run, with one external payout, it merely remains to identify which of the final coinjoin outputs is the external spend, and which are payouts to the makers. Depending on the details, this will usually be fairly easy, since the makers in the majority of cases will consume these utxos in joinmarket style transactions, whereas the external payout will not.
 
-See [simulation code](/simulations/tumbler_simulation.py). The simulation is a overly simplified case (fixed numbers of transactions per mixdepth, fixed fees for example), but simply running it will output an example of tracing all the way from the first transaction to the last (it generates random transaction data for each run, and will *usually*, but not always be successful).
+See [simulation code](/simulations/tumbler_simulation.py). The simulation is a overly simplified case (fixed numbers of transactions per mixdepth, fixed fees for example), but simply running it will output an example of tracing all the way from the first transaction to the last (it generates random transaction data for each run, and will *usually*, but not always be successful). Note the artificiality - in this code, the full set of 15 transactions for one tumbler run are used, so in that sense the question is begged; we already know that this is a tumbler run - but the method of closure mapping is shown.
+
+It is important to understand this issue in a broader context. The following subsection addresses this.
+
+### Feasibility of isolating tumbler transactions.
+
+As mentioned in the [introductory section](#executive-summary), it isn't obvious that the set of transactions constituting a particular tumbler run can be isolated from the general set of joinmarket transactions found on the blockchain. In times of low volume, such that only a tumbler run is occurring and no other JMTxs, it is of course much easier, but a more interesting question is what happens when there is a variety of activity going on at once: more than one tumbler, individual payments being sent etc. The following diagram shows that it still might be very feasible to carry out this linking analysis.
+
+![](/images/Closures-TXs.png)
+
+Worthy of note is the role played by yield generator algorithms. Yield generators ofer to mix from all of their mixdepths at different prices, generally. There is no guarantee that they will choose a different mixdepth from one transaction to the next, therefore closure mapping reuse on their part from one transaction to the next is far from unlikely. An example might be the linkage 3-6-8 in the above diagram. Is it a tumbler or simply the operation of a yield generator? It *seems* to be a good thing in the context of this analysis, as it will tend to increase obfuscation, but it's no simple matter.
 
 ## Ameliorations
 
@@ -278,6 +290,6 @@ See [simulation code](/simulations/tumbler_simulation.py). The simulation is a o
 
 ## Conclusions
 
-The higher level conclusion from this analysis is something like this: while not reusing addresses prevents trivial linkages of one payment to another, to the extent that JMSudoku is possible, we have an effect similar to address reuse: "closure mapping reuse". At the least we can say: reusing closure mappings like C1->C3 a large number of times is dangerous. 
+The higher level conclusion from this analysis is something like this: while not reusing addresses prevents trivial linkages of one payment to another, to the extent that JMSudoku is possible, we have an effect similar to address reuse: "closure mapping reuse". Given the complexities of the general transaction graph, we cannot say that such reuse "breaks Joinmarket", or even "breaks the current version of the tumbler", but at the least we can say: reusing closure mappings like C1->C3 a large number of times is dangerous, and clearly we want to err on the side of caution, to whatever extent is practical. 
 
 The two principal ways to address this: either break JMSudoku or avoid closure mapping reuse. Breaking of JMSudoku via modification of change outputs or changes to input selection should also be investigated, but is likely to be imperfect, at least, in practice (it can be made perfect, but only by using entirely impractical coinjoin designs like N equal inputs, N equal outputs). Avoiding or strictly limiting closure mapping reuse is much more practical, but requires careful thought.

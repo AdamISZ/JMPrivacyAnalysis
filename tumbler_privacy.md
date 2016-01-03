@@ -4,6 +4,9 @@
 
 This document addresses the extent to which blockchain analysis can enable the linkage of addresses in a run of Joinmarket's script `tumbler.py` as of version 0.1.0. The first two sections on [wallet structure](#joinmarket-wallet-structure) and [transaction types](#joinmarket-transaction-types) introduce the basic structure of joinmarket in terms of wallets and transactions, and can be skipped by those who know how Joinmarket works.
 The third [section](#tumbler-algorithm) describes in outline the default algorithm followed by the `tumbler.py` script.
+
+The fourth [section](#threat-model) briefly outlines the threat model under discussion, for context.
+ 
 The next two sections give an outline of a method that **might** practically identify the linkages between the addresses used by the user/runner of the tumbler script, under certain common scenarios. The word 'might' here is an acknowledgement of the uncertainty arising from the fact that the method described is a feasible, but not a certain, way of isolating the set of transactions which corresponded to a single tumbler run. There may be several factors affecting the likelihood of success, including the density of concurrent *other* joinmarket transactions going on by the same participants over the same time period. The final [section](#ameliorations), and the [conclusion](#conclusions), list a number of different improvements that will either partly or greatly ameliorate the weakness that is outlined.
 
 In simple terms, the core functionality of a coinjoin transaction - extending the possible set of owners of specific utxos - remains in place. But this analysis illustrates that the privacy gains of doing a sequence of Joinmarket-style coinjoins do not necessarily compound, either multiplicatively or at all (put differently: in the most negative scenario, a sequence of 15 joinmarket transactions might offer no more privacy than a single transaction). Additional measures must be taken which may involve (a) user choosing or not choosing certain tumbler options, (b) changing the Joinmarket codebase or (c) changing the usage pattern. Most likely all of (a), (b) and (c) should be under consideration.
@@ -145,6 +148,24 @@ By default, the tumbler will follow these steps:
 
 The remainder of this document analyses focuses on the simplest case, where only 1 external address is specified, and it should be borne in mind that this is the 'weakest' case for privacy; however a lot of the conclusions drawn still apply in the case of multiple external addresses.
 
+## Threat model
+
+The adversary is considered to be a 'blockchain analyst': an actor with access to the Bitcoin blockchain, at some point in the future, thus seeing all the JMTxs in the tumbler run, as well as all other JMTxs during the same period of course. We assume that they are somewhat computationally bounded, but the degree to which this is true is not particularly relevant, since the computational resources needed to conduct [JMSudoku](#jmsudoku-coinjoin-sudoku-for-jmtxs) and [closure analysis](#joinmarket-wallet-closures) are small in the current design.
+
+The threat is that the blockchain analyst is able to, with reasonably high probability, infer the output address or addresses from the input address(es) (i.e. the SourceJMTx(s)) for the tumbler run.
+
+There are **at least** three attack vectors that the blockchain analyst can employ:
+
+1. Timing correlation
+2. Amount correlation
+3. Wallet closure correlation
+
+Two points of note: 'wallet closure' is a term explained below [here](#joinmarket-wallet-closures). Also, other metadata analysis may well be possible, the most obvious being network-level correlation (e.g. IP addresses) and transaction fee correlation. These will not be discussed, and there may be others.
+
+Timing analysis correlation will provide strong evidence in the case where the volume of JMTxs is small; in the simplest case, we might assume that only one taker is operating at one time (i.e. there is one tumbler run and no other coinjoins). While this makes analysis much easier, it will not be assumed to be true in the remaining sections - it is not clear that large volume of JMTxs will prevent the kind of analysis described below, although it may make it harder.
+
+Amount correlation is also important, and is not discussed in detail. Note from the previous section, that the breaking up of JMTxs into several CJMTxs followed by a sweep also breaks up the amounts in the mixdepths, which greatly obfuscates amounts. None of the method in the following sections depends on successful amount correlation.
+
 ## JMSudoku: Coinjoin Sudoku for JMTxs
 
 A reminder that all (except source) JMTxs have this structure:
@@ -183,7 +204,7 @@ where the first entry in each pair is a random identifier (takes the role, in th
 
 [(0, ()), (130748995, (0,)), (291461442, (1,)), (288897067, (2,)), (641357205, (3,)), (803128130, (4,)), (84442088, (5,)), (422210437, (0, 1)), (419646062, (0, 2)), (772106200, (0, 3)), (933877125, (0, 4)), (215191083, (0, 5)), (580358509, (1, 2)), (932818647, (1, 3)), (1094589572, (1, 4)), (375903530, (1, 5)), (930254272, (2, 3)), (1092025197, (2, 4)), (373339155, (2, 5)), (1444485335, (3, 4)), (725799293, (3, 5)), (887570218, (4, 5)), (711107504, (0, 1, 2)), (1063567642, (0, 1, 3)), (1225338567, (0, 1, 4)), (506652525, (0, 1, 5)), (1061003267, (0, 2, 3)), (1222774192, (0, 2, 4)), (504088150, (0, 2, 5)), (1575234330, (0, 3, 4)), (856548288, (0, 3, 5)), (1018319213, (0, 4, 5)), (1221715714, (1, 2, 3)), (1383486639, (1, 2, 4)), (664800597, (1, 2, 5)), (1735946777, (1, 3, 4)), (1017260735, (1, 3, 5)), (1179031660, (1, 4, 5)), (1733382402, (2, 3, 4)), (1014696360, (2, 3, 5)), (1176467285, (2, 4, 5)), (1528927423, (3, 4, 5)), (1352464709, (0, 1, 2, 3)), (1514235634, (0, 1, 2, 4)), (795549592, (0, 1, 2, 5)), (1866695772, (0, 1, 3, 4)), (1148009730, (0, 1, 3, 5)), (1309780655, (0, 1, 4, 5)), (1864131397, (0, 2, 3, 4)), (1145445355, (0, 2, 3, 5)), (1307216280, (0, 2, 4, 5)), (1659676418, (0, 3, 4, 5)), (2024843844, (1, 2, 3, 4)), (1306157802, (1, 2, 3, 5)), (1467928727, (1, 2, 4, 5)), (1820388865, (1, 3, 4, 5)), (1817824490, (2, 3, 4, 5)), (2155592839, (0, 1, 2, 3, 4)), (1436906797, (0, 1, 2, 3, 5)), (1598677722, (0, 1, 2, 4, 5)), (1951137860, (0, 1, 3, 4, 5)), (1948573485, (0, 2, 3, 4, 5)), (2109285932, (1, 2, 3, 4, 5)), (2240034927, (0, 1, 2, 3, 4, 5))]
 
-It is impossible of course, within one JMTx, to identify which subset of x corresponds to which element of y, but 'coinjoin sudoku', a term coined by researcher K. Atlas [here](http://www.coinjoinsudoku.com/advisory/) in connection with the blockchain.info wallet, allows us to associate each z<sub>i</sub> with some subsetsum(x) with high probability, as long as a few reasonable assumptions hold:
+It is impossible of course, within one JMTx, to identify which subset of x corresponds to which element of y, but 'coinjoin sudoku', a term coined by researcher K. Atlas [here](http://www.coinjoinsudoku.com/advisory/) in connection with the blockchain.info SharedCoin coinjoin implementation, allows us to associate each z<sub>i</sub> with some subsetsum(x) with high probability, as long as a few reasonable assumptions hold:
 
 * The bitcoin amounts of the utxos is large compared with the size of Δ
 * The differences in the bitcoin amounts for each pair (z<sub>i</sub>, z<sub>j</sub>) where i and j correspond to different owners, is >> Δ.
@@ -261,13 +282,13 @@ Worthy of note is the role played by yield generator algorithms. Yield generator
 
 ## Ameliorations
 
-1. One sweep, not multiple transactions.
+1. One sweep, not multiple transactions?
 
- As is seen from the simple example above, using several transactions from one CMC/mixdepth to the next creates a pattern, if one uses different counterparties each time: because CMC C1 (as per the above diagram) goes to C3 in 3 different transactions, and not to any other CMC in *all* those transactions, the linkage can be detected. If there was only one transaction, that evidence would not exist.
+ As is seen from the simple example above, using several transactions from one CMC/mixdepth to the next creates a pattern, if one uses different counterparties each time: because CMC C1 (as per the above diagram) goes to C3 in 3 different transactions, and not to any other CMC in *all* those transactions, the linkage can be detected. If there was only one transaction, that evidence would not exist. However, doing *only sweeps for the whole tumbler algorithm* would result in a victory for amount correlation - each step would use approximately the same amount, *if* the mixdepths were empty before the start. Variations can be considered such as (n CJMTxs followed by 1 SweepJMTx for mixdepth 1) (1SweepJMTx for mixdepth2) (n CJMTxs followed by 1 SweepJMTx for mixdepth3) ... , in an attempt to mix the advantages of both models: amount de-correlation by means of multiple transactions, and closure mapping de-correlation by means of sweep without closure mapping reuse.
 
 2. Use the same counterparties.
 
- If the outputs from each of 3 transactions which all had inputs from C1, were to C4, C5 and C6, say, in every case, then there would be no evidence linking C1 to one of C4, C5 or C6. Thus it's specifically joining with **different parties multiple times from the same mixdepth** which causes an easy high-probability linkage between different CMCs/mixdepths. Note that 'different parties' here could include the same parties but different mixdepths, and so different closures.
+ If the outputs from each of 3 transactions which all had inputs from C1, were to C4, C5 and C6, say, in every case, then there would be no evidence linking C1 to one of C4, C5 or C6. Thus it's specifically joining with **different parties multiple times from the same mixdepth** which causes an easy high-probability linkage between different CMCs/mixdepths. Note that 'different parties' here could include the same parties but different mixdepths, and so different closures. This suggestion is interesting, but the amount of coordination between parties required may not be very practical.
 
 1. Not always sending to the same mixdepth in CJMTxs.
  Multiple CJMTxs spending from one mixdepth but paying to *different* mixdepths, i.e. not always to mixdepth m+1, would make the closure mapping either more difficult or impossible depending on the details. For this, it may be of considerable advantage to use more than the default number of mixdepths (5), although practical problems may limit how far this can go. Also note that might be applied to either maker bots (yield-generator) or to the tumbler, but its impact on the tumbler algorithm design would have to be carefully considered.
@@ -282,11 +303,11 @@ Worthy of note is the role played by yield generator algorithms. Yield generator
 
 4. Splitting change into multiple amounts
 
- If amount(z<sub>i</sub>) > y, create two change outputs (y, z<sub>i</sub> -y). This *considerably* increases the complexity/uncertainty of a sudoku-style analysis (more analysis is needed to establish whether it breaks it entirely). If this cannot be done, it probably achieves little to simply create a split of change outputs (i.e. each counterparty creating more than one change output), since subset sum type analysis would still be able to find the input-change linkages as before. The additional combinatorial blowup is almost certainly not significant, considering that very small outputs will be impractical to spend (dust etc.).
+ If amount(z<sub>i</sub>) > y, create two change outputs (y, z<sub>i</sub> -y). This *considerably* increases the complexity/uncertainty of a sudoku-style analysis (more analysis is needed to establish whether it breaks it entirely). It could be achieved 'by force', if each counterparty selects sufficient utxos in their input to provide change+coinjoin amount; the disadvantage is that creating 2 change outputs means more utxos to be spent and paid for in transaction fees. If this extra change algorithm is not applied, it probably achieves little to simply create a split of change outputs (i.e. each counterparty creating more than one change output), since subset sum type analysis would still be able to find the input-change linkages as before. The additional combinatorial blowup is almost certainly not significant, considering that very small outputs will be impractical to spend (dust etc.).
  
 4. High transaction volume
 
- The following has been kept out of scope of the analysis: with every yield generator counterparty performing multiple other transactions concurrently with those for the one tumbler under consideration, it may be fairly difficult for the analyst to identify the exact set of transactions for this tumbler. It certainly complexifies the analysis, but the analysis is not computationally intensive (assuming transactions are not huge), and the closure mappings combined with fee payment are probably enough to filter the transaction data until the tumbler's subset is clear.
+ The following has been kept mostly out of scope of the analysis: with every yield generator counterparty performing multiple other transactions concurrently with those for the one tumbler under consideration, it may be fairly difficult for the analyst to identify the exact set of transactions for this tumbler. It certainly complexifies the analysis, but the analysis is not computationally intensive (assuming transactions are not huge), and the closure mappings combined with fee payment are probably enough to filter the transaction data until the tumbler's subset is clear.
 
 ## Conclusions
 
